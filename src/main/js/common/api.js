@@ -6,10 +6,11 @@ import { getJSON, postJSON, post } from "sonar-request";
 
 // Function used to get current SonarQube Server version
 export function isCompatible() {
-  const COMPATIBILITY_PATTERN = /(25)(\.\d)(\.\d)*/;
+  const COMPATIBILITY_PATTERN = /^(10|25|2025)(\.\d+)+$/;
 
   return getJSON("/api/system/status").then(response => {
-    return response.version.match(COMPATIBILITY_PATTERN) != null;
+    const normalizedVersion = (response.version || "").split("-")[0];
+    return normalizedVersion.match(COMPATIBILITY_PATTERN) != null;
   });
 }
 
@@ -71,13 +72,6 @@ function createToken(name) {
   return postJSON("/api/user_tokens/generate", { "name": name, "expirationDate": expireDate });
 }
 
-// Function used to get the current logged user name
-function getUserName(login) {
-  return getJSON("/api/users/search", { "q": login }).then(response => {
-    return response.users[0].name;
-  });
-}
-
 function formatDate(date) {
     let d = new Date(date),
         month = '' + (d.getMonth() + 1),
@@ -98,12 +92,10 @@ export function initiatePluginToken() {
 
   return revokeToken(name).then(() => {
     return createToken(name).then(tokenResponse => {
-      return getUserName(tokenResponse.login).then(userResponse => {
-        return {
-          token: tokenResponse.token,
-          author: userResponse
-        }
-      });
+      return {
+        token: tokenResponse.token,
+        author: tokenResponse.login
+      };
     });
   });
 }

@@ -130,6 +130,58 @@ public class AbstractProjectProviderTest {
         result = provider.hasProject("project_2", "test");
         assertFalse(result);
     }
+
+    @Test
+    public void getProjectFromPublicApiShapeTest() throws BadSonarQubeRequestException, SonarQubeException {
+        // Mock language provider
+        LanguageProvider languageProvider = Mockito.mock(LanguageProviderStandalone.class);
+        Languages languages = Mockito.mock(Languages.class);
+        Mockito.when(languageProvider.getLanguages()).thenReturn(languages);
+        Mockito.when(languages.getLanguage("language_1")).thenReturn("Java");
+
+        // Fake /api/components/show response shape
+        JsonObject component = new JsonObject();
+        component.addProperty("key", "project_1");
+        component.addProperty("name", "Project 1");
+        JsonObject projectResponse = new JsonObject();
+        projectResponse.add("component", component);
+
+        // Fake /api/qualityprofiles/search response
+        JsonObject profile = new JsonObject();
+        profile.addProperty("language", "language_1");
+        profile.addProperty("key", "qp_1");
+        profile.addProperty("name", "Sonar way");
+        JsonArray profiles = new JsonArray();
+        profiles.add(profile);
+        JsonObject qualityProfiles = new JsonObject();
+        qualityProfiles.add("profiles", profiles);
+
+        ProjectProviderWrapper provider = new ProjectProviderWrapper(languageProvider);
+        provider.setFakeProject(projectResponse);
+        provider.setFakeQualityProfiles(qualityProfiles);
+
+        Project result = provider.getProject();
+        assertEquals("project_1", result.getKey());
+        assertEquals(1, result.getQualityProfiles().length);
+        assertEquals("Java", result.getQualityProfiles()[0].getLanguageName());
+        assertEquals("branch", result.getBranch());
+    }
+
+    @Test
+    public void hasProjectFromPublicApiShapeTest() throws BadSonarQubeRequestException, SonarQubeException {
+        LanguageProvider languageProvider = Mockito.mock(LanguageProviderStandalone.class);
+
+        JsonObject component = new JsonObject();
+        component.addProperty("key", "project_1");
+        JsonObject projectResponse = new JsonObject();
+        projectResponse.add("component", component);
+
+        ProjectProviderWrapper provider = new ProjectProviderWrapper(languageProvider);
+        provider.setFakeProject(projectResponse);
+
+        assertTrue(provider.hasProject("project_1", "branch"));
+        assertFalse(provider.hasProject("project_2", "branch"));
+    }
     
     /**
      * Test class in order to test the abstract provider class
@@ -137,6 +189,7 @@ public class AbstractProjectProviderTest {
     class ProjectProviderWrapper extends AbstractProjectProvider {
 
         JsonObject project;
+        JsonObject qualityProfiles;
 
         public ProjectProviderWrapper(final LanguageProvider pLanguageProvider) {
             super("server", "token", "project", "branch", pLanguageProvider);
@@ -151,12 +204,22 @@ public class AbstractProjectProviderTest {
             this.project = pFake;
         }
 
+        public void setFakeQualityProfiles(JsonObject pFake) {
+            this.qualityProfiles = pFake;
+        }
+
         /**
          * Wrapper methods to mock the API response
          */
         protected JsonObject getProjectAsJsonObject(final String projectKey, final String branch)
             throws BadSonarQubeRequestException, SonarQubeException {
             return this.project;
+        }
+
+        @Override
+        protected JsonObject getProjectQualityProfilesAsJsonObject(final String projectKey)
+                throws BadSonarQubeRequestException, SonarQubeException {
+            return this.qualityProfiles != null ? this.qualityProfiles : new JsonObject();
         }
 
         /**

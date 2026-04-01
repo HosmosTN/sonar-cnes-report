@@ -59,4 +59,10 @@ public class ProjectProviderStandalone extends AbstractProjectProvider implement
         // if there is an error on server side this method throws an exception
         return request(String.format(getRequest(GET_PROJECT_REQUEST), getServer(), projectKey, branch));
     }
+
+    @Override
+    protected JsonObject getProjectQualityProfilesAsJsonObject(final String projectKey)
+            throws BadSonarQubeRequestException, SonarQubeException {
+        return request(String.format(getRequest(GET_QUALITY_PROFILES_REQUEST), getServer(), projectKey));
+    }
 }

@@ -172,19 +172,21 @@ public abstract class AbstractQualityGateProvider extends AbstractDataProvider {
         // get all the quality gates
         final List<QualityGate> qualityGates = getQualityGatesAbstract();
 
-        final JsonObject jsonObject = getProjectAsJsonObject();
+        final JsonObject jsonObject = getProjectQualityGateAsJsonObject();
 
         // search for the good quality gate
         final Iterator<QualityGate> qualityGatesIterator = qualityGates.iterator();
         
         QualityGate tmp;
         boolean find = false;
-        final String key = jsonObject.getAsJsonObject(QUALITY_GATE).get(KEY).getAsString();
-        final String name = jsonObject.getAsJsonObject(QUALITY_GATE).get(NAME).getAsString();
+        final JsonObject projectQualityGate = jsonObject.getAsJsonObject(QUALITY_GATE);
+        final String key = projectQualityGate.has(KEY) ? projectQualityGate.get(KEY).getAsString() : null;
+        final String name = projectQualityGate.has(NAME) ? projectQualityGate.get(NAME).getAsString() : null;
 
         while (qualityGatesIterator.hasNext() && !find) {
             tmp = qualityGatesIterator.next();
-            if (tmp.getName().equals(name) || tmp.getId().equals(key)) {
+            if ((name != null && tmp.getName().equals(name))
+                    || (key != null && tmp.getId().equals(key))) {
                 res = tmp;
                 find = true;
             }
@@ -192,7 +194,7 @@ public abstract class AbstractQualityGateProvider extends AbstractDataProvider {
 
         // check if it was found
         if (!find) {
-            throw new UnknownQualityGateException(key);
+            throw new UnknownQualityGateException(name != null ? name : String.valueOf(key));
         }       
 
         return res;
@@ -347,7 +349,7 @@ public abstract class AbstractQualityGateProvider extends AbstractDataProvider {
      * @throws BadSonarQubeRequestException A request is not recognized by the server.
      * @throws SonarQubeException When SonarQube server is not callable.
      */
-    protected abstract JsonObject getProjectAsJsonObject() throws BadSonarQubeRequestException, SonarQubeException;
+    protected abstract JsonObject getProjectQualityGateAsJsonObject() throws BadSonarQubeRequestException, SonarQubeException;
 
     /**
      * Get a JsonObject from the response of a get project status request.

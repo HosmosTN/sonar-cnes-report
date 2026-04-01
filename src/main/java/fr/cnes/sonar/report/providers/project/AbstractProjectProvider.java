@@ -37,6 +37,22 @@ import fr.cnes.sonar.report.utils.StringManager;
  * Contains common code for project providers
  */
 public abstract class AbstractProjectProvider extends AbstractDataProvider {
+    /**
+     * Name of the request for getting quality profiles
+     */
+    protected static final String GET_QUALITY_PROFILES_REQUEST = "GET_QUALITY_PROFILES_REQUEST";
+    /**
+     * Field used in API responses to wrap component data
+     */
+    private static final String COMPONENT = "component";
+    /**
+     * Field used in API responses for project quality profiles
+     */
+    private static final String QUALITY_PROFILES = "qualityProfiles";
+    /**
+     * Field used in API responses for profiles search
+     */
+    private static final String PROFILES = "profiles";
 
     /**
      * The language provider
@@ -79,20 +95,26 @@ public abstract class AbstractProjectProvider extends AbstractDataProvider {
      */
     protected Project getProjectAbstract(final String projectKey, final String branch)
             throws BadSonarQubeRequestException, SonarQubeException {
-        final JsonObject jo = getProjectAsJsonObject(projectKey, branch);
+        final JsonObject rawResponse = getProjectAsJsonObject(projectKey, branch);
+        final JsonObject jo = normalizeProjectJsonObject(rawResponse);
 
         // put json in a Project class
         final Project project = (getGson().fromJson(jo, Project.class));
-        ProfileMetaData[] metaData;
+        ProfileMetaData[] metaData = getProjectQualityProfiles(jo, projectKey);
 
         // set language's name for profiles and add each language to the project languages list
-        metaData = project.getQualityProfiles();        
         String languageName;
         Map<String, Language> languages = new HashMap<>();
         for(ProfileMetaData it : metaData){
             String languageKey = it.getLanguage();
 
-            languageName = languageProvider.getLanguages().getLanguage(languageKey);
+            languageName = languageKey;
+            if (languageProvider != null && languageProvider.getLanguages() != null) {
+                final String resolvedLanguage = languageProvider.getLanguages().getLanguage(languageKey);
+                if (resolvedLanguage != null) {
+                    languageName = resolvedLanguage;
+                }
+            }
             it.setLanguageName(languageName);
 
             Language language = new Language();
@@ -112,6 +134,10 @@ public abstract class AbstractProjectProvider extends AbstractDataProvider {
         if(null == project.getVersion()) {
             project.setVersion(StringManager.EMPTY);
         }
+        // preserve the requested branch when API does not return one
+        if (project.getBranch() == null || project.getBranch().isEmpty()) {
+            project.setBranch(branch);
+        }
 
         return project;
     }
@@ -126,12 +152,56 @@ public abstract class AbstractProjectProvider extends AbstractDataProvider {
      */
     protected boolean hasProjectAbstract(final String projectKey, final String branch)
             throws BadSonarQubeRequestException, SonarQubeException {
-        final JsonObject jsonObject = getProjectAsJsonObject(projectKey, branch);
+        final JsonObject rawResponse = getProjectAsJsonObject(projectKey, branch);
+        final JsonObject jsonObject = normalizeProjectJsonObject(rawResponse);
+
+        if (!jsonObject.has("key") || jsonObject.get("key").isJsonNull()) {
+            return false;
+        }
 
         // Retrieve project key if the project exists or null.
         final String project = jsonObject.get("key").getAsString();
 
         return project != null && project.equals(projectKey);
+    }
+
+    /**
+     * Normalize project API response shape.
+     * Some public APIs return a top-level "component" object while legacy APIs returned project fields at root.
+     * @param response Raw response from SonarQube.
+     * @return The JsonObject containing project fields.
+     */
+    private JsonObject normalizeProjectJsonObject(final JsonObject response) {
+        if (response.has(COMPONENT) && response.get(COMPONENT).isJsonObject()) {
+            return response.getAsJsonObject(COMPONENT);
+        }
+        return response;
+    }
+
+    /**
+     * Retrieve quality profiles attached to a project, from project payload or dedicated quality profile API.
+     * @param projectJson Normalized project JSON object.
+     * @param projectKey SonarQube project key.
+     * @return Array of quality profile metadata.
+     * @throws BadSonarQubeRequestException when the server does not understand the request.
+     * @throws SonarQubeException When SonarQube server is not callable.
+     */
+    private ProfileMetaData[] getProjectQualityProfiles(final JsonObject projectJson, final String projectKey)
+            throws BadSonarQubeRequestException, SonarQubeException {
+        if (projectJson.has(QUALITY_PROFILES) && projectJson.get(QUALITY_PROFILES).isJsonArray()) {
+            final ProfileMetaData[] embedded = getGson().fromJson(projectJson.get(QUALITY_PROFILES), ProfileMetaData[].class);
+            return embedded != null ? embedded : new ProfileMetaData[0];
+        }
+
+        final JsonObject qualityProfilesResponse = getProjectQualityProfilesAsJsonObject(projectKey);
+        if (qualityProfilesResponse != null
+                && qualityProfilesResponse.has(PROFILES)
+                && qualityProfilesResponse.get(PROFILES).isJsonArray()) {
+            final ProfileMetaData[] fetched = getGson().fromJson(qualityProfilesResponse.get(PROFILES), ProfileMetaData[].class);
+            return fetched != null ? fetched : new ProfileMetaData[0];
+        }
+
+        return new ProfileMetaData[0];
     }
 
     /**
@@ -141,5 +211,15 @@ public abstract class AbstractProjectProvider extends AbstractDataProvider {
      * @throws SonarQubeException When SonarQube server is not callable.
      */
     protected abstract JsonObject getProjectAsJsonObject(final String projectKey, final String branch)
+            throws BadSonarQubeRequestException, SonarQubeException;
+
+    /**
+     * Get quality profiles linked to the project from SonarQube API.
+     * @param projectKey the key of the project.
+     * @return The response as a JsonObject.
+     * @throws BadSonarQubeRequestException A request is not recognized by the server.
+     * @throws SonarQubeException When SonarQube server is not callable.
+     */
+    protected abstract JsonObject getProjectQualityProfilesAsJsonObject(final String projectKey)
             throws BadSonarQubeRequestException, SonarQubeException;
 }

@@ -353,7 +353,7 @@ public class AbstractQualityGateProviderTest {
             return fakeQualityGatesDetails;
         }
 
-        protected JsonObject getProjectAsJsonObject() {
+        protected JsonObject getProjectQualityGateAsJsonObject() {
             return fakeProject;
         }
 

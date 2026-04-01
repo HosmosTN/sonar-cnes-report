@@ -46,6 +46,10 @@ public class QualityGateProviderStandalone extends AbstractQualityGateProvider i
      */
     private static final String GET_QUALITY_GATE_STATUS_REQUEST = "GET_QUALITY_GATE_STATUS_REQUEST";
     /**
+     * Name of the request for getting the quality gate linked to a project
+     */
+    private static final String GET_PROJECT_QUALITY_GATE_REQUEST = "GET_PROJECT_QUALITY_GATE_REQUEST";
+    /**
      * Name of the request for getting a specific metric
      */
     private static final String GET_METRIC_REQUEST = "GET_METRIC_REQUEST";
@@ -92,8 +96,8 @@ public class QualityGateProviderStandalone extends AbstractQualityGateProvider i
     }
 
     @Override
-    protected JsonObject getProjectAsJsonObject() throws BadSonarQubeRequestException, SonarQubeException {
-        return request(String.format(getRequest(GET_PROJECT_REQUEST), getServer(), getProjectKey(), getBranch()));
+    protected JsonObject getProjectQualityGateAsJsonObject() throws BadSonarQubeRequestException, SonarQubeException {
+        return request(String.format(getRequest(GET_PROJECT_QUALITY_GATE_REQUEST), getServer(), getProjectKey()));
     }
 
     @Override
