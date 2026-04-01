@@ -102,14 +102,16 @@ public class QualityGateProviderStandalone extends AbstractQualityGateProvider i
 
     @Override
     protected JsonObject getQualityGateStatusAsJsonObject() throws BadSonarQubeRequestException, SonarQubeException {
-        return request(String.format(getRequest(GET_QUALITY_GATE_STATUS_REQUEST), getServer(), getBranch(),
-                getProjectKey()));
+        final String qualityGateStatusRequest = String.format(getRequest(GET_QUALITY_GATE_STATUS_REQUEST), getServer(),
+                getProjectKey());
+        return request(addBranchToRequest(qualityGateStatusRequest));
     }
 
     @Override
     protected JsonObject getMetricAsJsonObject(final String metricKey)
             throws BadSonarQubeRequestException, SonarQubeException {
-        return request(String.format(getRequest(GET_METRIC_REQUEST), getServer(), getBranch(), getProjectKey(),
-                metricKey));
+        final String metricRequest = String.format(getRequest(GET_METRIC_REQUEST), getServer(), getProjectKey(),
+                metricKey);
+        return request(addBranchToRequest(metricRequest));
     }
 }

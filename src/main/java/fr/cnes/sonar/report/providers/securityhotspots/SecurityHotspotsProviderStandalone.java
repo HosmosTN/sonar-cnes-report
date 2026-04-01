@@ -82,8 +82,9 @@ public class SecurityHotspotsProviderStandalone extends AbstractSecurityHotspots
     @Override
     protected JsonObject getSecurityHotspotsAsJsonObject(final int page, final int maxPerPage, final String status)
             throws BadSonarQubeRequestException, SonarQubeException {
-        return request(String.format(getRequest(GET_SECURITY_HOTSPOTS_REQUEST), getServer(), getBranch(), page,
-                getProjectKey(), maxPerPage, status));
+        final String securityHotspotsRequest = String.format(getRequest(GET_SECURITY_HOTSPOTS_REQUEST), getServer(),
+                page, getProjectKey(), maxPerPage, status);
+        return request(addBranchToRequest(securityHotspotsRequest));
     }
 
     @Override

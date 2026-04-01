@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 import fr.cnes.sonar.report.exceptions.BadSonarQubeRequestException;
 import fr.cnes.sonar.report.exceptions.SonarQubeException;
 import fr.cnes.sonar.report.utils.StringManager;
+import fr.cnes.sonar.report.utils.UrlEncoder;
 import org.sonarqube.ws.client.WsClient;
 import org.sonar.core.util.ProtobufJsonFormat;
 
@@ -418,6 +419,41 @@ public abstract class AbstractDataProvider {
      */
     public void setBranch(final String branch) {
         this.branch = branch;
+    }
+
+    /**
+     * Check if branch parameter should be omitted from SonarQube API request.
+     * @param branchName branch value to inspect
+     * @return {@code true} when branch is not explicitly set
+     */
+    protected boolean isDefaultBranch(final String branchName) {
+        return branchName == null
+                || branchName.isEmpty()
+                || StringManager.NO_BRANCH.equals(branchName);
+    }
+
+    /**
+     * Add branch query parameter to a request when branch is explicitly set.
+     * @param request base request URL
+     * @return request URL with optional branch query parameter
+     */
+    protected String addBranchToRequest(final String request) {
+        return addBranchToRequest(request, getBranch());
+    }
+
+    /**
+     * Add branch query parameter to a request when branch is explicitly set.
+     * @param request base request URL
+     * @param branchName branch value to append
+     * @return request URL with optional branch query parameter
+     */
+    protected String addBranchToRequest(final String request, final String branchName) {
+        if (isDefaultBranch(branchName)) {
+            return request;
+        }
+
+        final String separator = request.contains("?") ? "&" : "?";
+        return request + separator + "branch=" + UrlEncoder.urlEncodeString(branchName);
     }
 
     /**

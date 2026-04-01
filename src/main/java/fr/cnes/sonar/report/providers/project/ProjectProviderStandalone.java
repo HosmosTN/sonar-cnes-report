@@ -55,9 +55,10 @@ public class ProjectProviderStandalone extends AbstractProjectProvider implement
     @Override
     protected JsonObject getProjectAsJsonObject(final String projectKey, final String branch)
             throws BadSonarQubeRequestException, SonarQubeException {
-        // send a request to sonarqube server and return th response as a json object
+        // send a request to sonarqube server and return the response as a json object
         // if there is an error on server side this method throws an exception
-        return request(String.format(getRequest(GET_PROJECT_REQUEST), getServer(), projectKey, branch));
+        final String projectRequest = String.format(getRequest(GET_PROJECT_REQUEST), getServer(), projectKey);
+        return request(addBranchToRequest(projectRequest, branch));
     }
 
     @Override

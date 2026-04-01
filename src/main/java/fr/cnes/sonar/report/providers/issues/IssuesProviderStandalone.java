@@ -85,9 +85,8 @@ public class IssuesProviderStandalone extends AbstractIssuesProvider implements 
             throws BadSonarQubeRequestException, SonarQubeException {
         // prepare the server to get all the issues
         final String request = String.format(getRequest(GET_ISSUES_REQUEST), getServer(), getProjectKey(),
-                getMetrics(ISSUES_FACETS), maxPerPage, page, getMetrics(ISSUES_ADDITIONAL_FIELDS), confirmed,
-                getBranch());
+                getMetrics(ISSUES_FACETS), maxPerPage, page, getMetrics(ISSUES_ADDITIONAL_FIELDS), confirmed);
         // perform the request to the server
-        return request(request);
+        return request(addBranchToRequest(request));
     }
 }

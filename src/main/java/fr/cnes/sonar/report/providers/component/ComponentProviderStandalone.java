@@ -54,8 +54,9 @@ public class ComponentProviderStandalone extends AbstractComponentProvider imple
     @Override
     protected JsonObject getComponentsAsJsonObject(final int page)
             throws BadSonarQubeRequestException, SonarQubeException {
-        return request(String.format(getRequest(GET_COMPONENTS_REQUEST), getServer(), getProjectKey(),
+        final String componentRequest = String.format(getRequest(GET_COMPONENTS_REQUEST), getServer(), getProjectKey(),
                 getMetrics(SHEETS_METRICS), page,
-                getRequest(MAX_PER_PAGE_SONARQUBE), getBranch()));
+                getRequest(MAX_PER_PAGE_SONARQUBE));
+        return request(addBranchToRequest(componentRequest));
     }
 }

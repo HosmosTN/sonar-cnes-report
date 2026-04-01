@@ -70,9 +70,9 @@ public class FacetsProviderStandalone extends AbstractFacetsProvider implements 
         // prepare the request
         final String request = String.format(getRequest(GET_ISSUES_REQUEST), getServer(), getProjectKey(),
                 getMetrics(PROJECT_FACETS), FACETS_MAX_PER_PAGE, page, getMetrics(PROJECT_ADDITIONAL_FIELDS),
-                FACETS_STATUS, getBranch());
+                FACETS_STATUS);
         // contact the server to request the resources as json
-        return request(request);
+        return request(addBranchToRequest(request));
     }
 
     @Override
@@ -80,8 +80,8 @@ public class FacetsProviderStandalone extends AbstractFacetsProvider implements 
             throws BadSonarQubeRequestException, SonarQubeException {
         // prepare the request
         final String request = String.format(getRequest(GET_MEASURES_HISTORY_REQUEST), getServer(), getProjectKey(),
-                getMetrics(CHARTS_METRICS), maxPerPage, page, getBranch());
+                getMetrics(CHARTS_METRICS), maxPerPage, page);
         // perform the request to the server
-        return request(request);
+        return request(addBranchToRequest(request));
     }
 }

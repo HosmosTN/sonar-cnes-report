@@ -54,6 +54,8 @@ public class MeasureProviderStandalone extends AbstractMeasureProvider implement
 
     @Override
     protected JsonObject getMeasuresAsJsonObject() throws BadSonarQubeRequestException, SonarQubeException {
-        return request(String.format(getRequest(GET_MEASURES_REQUEST), getServer(), getProjectKey(), getMetrics(REPORTS_METRICS), getBranch()));
+        final String measuresRequest = String.format(getRequest(GET_MEASURES_REQUEST), getServer(), getProjectKey(),
+                getMetrics(REPORTS_METRICS));
+        return request(addBranchToRequest(measuresRequest));
     }
 }
