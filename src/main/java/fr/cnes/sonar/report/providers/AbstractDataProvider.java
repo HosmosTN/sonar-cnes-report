@@ -18,6 +18,8 @@
 package fr.cnes.sonar.report.providers;
 
 import com.google.protobuf.Message;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -26,7 +28,6 @@ import fr.cnes.sonar.report.exceptions.SonarQubeException;
 import fr.cnes.sonar.report.utils.StringManager;
 import fr.cnes.sonar.report.utils.UrlEncoder;
 import org.sonarqube.ws.client.WsClient;
-import org.sonar.core.util.ProtobufJsonFormat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -336,9 +337,13 @@ public abstract class AbstractDataProvider {
      * @return the response as a JsonObject
      */
     protected JsonObject responseToJsonObject(Message response) {
-        final String jsonString = ProtobufJsonFormat.toJson(response);
-        final JsonElement jsonElement = getGson().fromJson(jsonString, JsonElement.class);
-        return jsonElement.getAsJsonObject();
+        try {
+            final String jsonString = JsonFormat.printer().includingDefaultValueFields().print(response);
+            final JsonElement jsonElement = getGson().fromJson(jsonString, JsonElement.class);
+            return jsonElement.getAsJsonObject();
+        } catch (InvalidProtocolBufferException e) {
+            throw new IllegalStateException("Unable to convert protobuf response to JSON", e);
+        }
     }
 
     /**

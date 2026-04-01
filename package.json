@@ -11,12 +11,18 @@
         ]
     },
     "dependencies": {
-        "@babel/core": "7.24.6",
-        "babel-loader": "9.1.3",
-        "babel-preset-react-app": "10.0.1",
-        "css-loader": "7.1.2",
+        "@babel/core": "7.29.0",
+        "babel-loader": "10.1.1",
+        "babel-preset-react-app": "10.1.0",
+        "css-loader": "7.1.4",
         "style-loader": "4.0.0",
-        "webpack": "5.91.0"
+        "webpack": "5.105.4"
+    },
+    "resolutions": {
+        "@babel/helpers": "7.29.2",
+        "@babel/runtime": "7.29.2",
+        "ajv": "8.18.0",
+        "yaml": "1.10.3"
     },
     "devDependencies": {
         "@babel/plugin-proposal-private-property-in-object": "7.21.11"

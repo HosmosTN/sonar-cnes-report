@@ -17,7 +17,6 @@
 
 package fr.cnes.sonar.report.exporters.data;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +59,7 @@ public class PlaceHoldersTest extends CommonTest {
         expected.put("XX-SECURITY-XX", "C.png");
         expected.put("XX-SECURITYREVIEW-XX", "D.png");
         expected.put("XX-MINCOGNITIVECOMPLEXITY-XX", "unknown");
-        expected.put("XX-DATE-XX", new Date().toString().substring(0,16));
+        expected.put("XX-DATE-XX", report.getProjectDate());
         expected.put("XX-ANALYSISDATE-XX", "2020-10-10T2020+0200");
         expected.put("XX-RELIABILITY-XX", "A.png");
         expected.put("XX-COVERAGE-XX", "1.0");
